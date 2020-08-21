@@ -42,7 +42,7 @@ func (n *Notifier) PushError(message string, err error) {
 }
 
 func newNotification() *Notification {
-	return &Notification{[]string{}}
+	return &Notification{[]string{"appIcon", "danger.png"}}
 }
 
 func (n *Notification) addArg(key string, value string) {

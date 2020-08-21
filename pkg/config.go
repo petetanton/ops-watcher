@@ -7,11 +7,11 @@ import (
 )
 
 type Config struct {
-	JiraUsername string `mapstructure:"jira_username"`
-	JiraPassword string `mapstructure:"jira_password"`
-	JiraBaseUrl  string `mapstructure:"jira_baseurl"`
-	JiraEnabled  bool   `mapstructure:"jira_enabled"`
-	JiraQuery    string `mapstructure:"jira_query"`
+	JiraUsername string   `mapstructure:"jira_username"`
+	JiraPassword string   `mapstructure:"jira_password"`
+	JiraBaseUrl  string   `mapstructure:"jira_baseurl"`
+	JiraEnabled  bool     `mapstructure:"jira_enabled"`
+	JiraQuery    []string `mapstructure:"jira_query"`
 }
 
 func NewConfig() (*Config, error) {

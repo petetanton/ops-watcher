@@ -18,7 +18,7 @@ type JiraWatcher struct {
 	LastQueryTime time.Time
 }
 
-func NewJiraWatcher(config *Config) (*JiraWatcher, error) {
+func NewJiraWatchers(config *Config) ([]*JiraWatcher, error) {
 	tp := jira.BasicAuthTransport{
 		Username: config.JiraUsername,
 		Password: config.JiraPassword,
@@ -29,14 +29,20 @@ func NewJiraWatcher(config *Config) (*JiraWatcher, error) {
 		return nil, err
 	}
 
-	return &JiraWatcher{
-		JiraClient: jiraClient,
-		JiraQuery:  config.JiraQuery,
-	}, nil
+	var jiraWatchers []*JiraWatcher
+
+	for _, query := range config.JiraQuery {
+		jiraWatchers = append(jiraWatchers, &JiraWatcher{
+			JiraClient: jiraClient,
+			JiraQuery:  query,
+		})
+	}
+	return jiraWatchers, nil
 }
 
 func (jw *JiraWatcher) getQueryWithTime() string {
-	query := fmt.Sprintf("%s and created >= \"%s\"", jw.JiraQuery, jw.LastQueryTime.Format("2006-01-02 15:04"))
+	formatTime := jw.LastQueryTime.Format("2006-01-02 15:04")
+	query := fmt.Sprintf("%s and (created >= \"%s\" or updated >= \"%s\")", jw.JiraQuery, formatTime, formatTime)
 	jw.LastQueryTime = time.Now()
 	return query
 }
@@ -68,7 +74,7 @@ func (jw *JiraWatcher) Watch() ([]*Notification, error) {
 
 func (jw *JiraWatcher) convertJiraIssueToNotification(issue jira.Issue) *Notification {
 	notification := newNotification()
-	notification.addArg("subtitle", issue.Key)
+	notification.addArg("subtitle", fmt.Sprintf("update to %s", issue.Key))
 	notification.addArg("message", issue.Fields.Description)
 	url := jw.JiraClient.GetBaseURL()
 	notification.addArg("open", fmt.Sprintf("%sbrowse/%s", url.String(), issue.Key))

@@ -21,12 +21,14 @@ func main() {
 	var watchers []pkg.Watcher
 
 	if config.JiraEnabled {
-		jiraWatcher, err := pkg.NewJiraWatcher(config)
+		jiraWatchers, err := pkg.NewJiraWatchers(config)
 		if err != nil {
 			notifier.PushError("error when creating JiraWatcher", err)
 		}
 
-		watchers = append(watchers, jiraWatcher)
+		for _, jiraWatcher := range jiraWatchers {
+			watchers = append(watchers, jiraWatcher)
+		}
 
 	}
 

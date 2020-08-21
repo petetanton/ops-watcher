@@ -31,7 +31,7 @@ jobs:
         fi
 
     - name: Build
-      run: go build -v .
+      run: env GOOS=darwin GOARCH=amd64 go build main.go ops-watcher-darwin-amd64
 
     - name: Test
       run: go test -v .

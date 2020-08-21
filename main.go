@@ -2,7 +2,9 @@ package main
 
 import (
 	"github.com/petetanton/ops-watcher/pkg"
+	"gopkg.in/robfig/cron.v2"
 	"log"
+	"runtime"
 )
 
 func main() {
@@ -16,23 +18,15 @@ func main() {
 		notifier.PushError("got an error parsing config", err)
 	}
 
+	var watchers []pkg.Watcher
+
 	if config.JiraEnabled {
-		watcher, err := pkg.NewJiraWatcher(config)
+		jiraWatcher, err := pkg.NewJiraWatcher(config)
 		if err != nil {
 			notifier.PushError("error when creating JiraWatcher", err)
 		}
 
-		notifications, err := watcher.Watch()
-		if err != nil {
-			notifier.PushError("error when creating notifcations", err)
-		} else {
-			for _, notification := range notifications {
-				err := notification.ToCommand().Run()
-				if err != nil {
-					log.Fatal(err)
-				}
-			}
-		}
+		watchers = append(watchers, jiraWatcher)
 
 	}
 
@@ -43,6 +37,31 @@ func main() {
 		msg += "DISABLED"
 	}
 
-	notifier.Push("Setup", msg, "https://github.com/petetanton/ops-watcher")
+	log.Printf("Setup: %s", msg)
 
+	c := cron.New()
+	c.AddFunc("* * * * *", func() { runWatchers(watchers, notifier) })
+	c.Start()
+
+	runtime.Goexit()
+
+	//time.Sleep(10 * time.Second)
+	//c.Stop()
+}
+
+func runWatchers(watchers []pkg.Watcher, notifier pkg.Notifier) {
+	log.Println("Running watchers")
+	for _, watcher := range watchers {
+		notifications, err := watcher.Watch()
+		if err != nil {
+			notifier.PushError("error when creating notifications", err)
+		} else {
+			for _, notification := range notifications {
+				err := notification.ToCommand().Run()
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+		}
+	}
 }

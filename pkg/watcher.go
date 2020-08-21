@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/andygrunwald/go-jira"
 	"github.com/pkg/errors"
+	"log"
 	"time"
 )
 
@@ -15,8 +16,6 @@ type JiraWatcher struct {
 	JiraClient    *jira.Client
 	JiraQuery     string
 	LastQueryTime time.Time
-
-	Watcher
 }
 
 func NewJiraWatcher(config *Config) (*JiraWatcher, error) {
@@ -49,7 +48,7 @@ func (jw *JiraWatcher) Watch() ([]*Notification, error) {
 	}
 
 	query := jw.getQueryWithTime()
-
+	log.Printf("running: %s", query)
 	issues, response, err := jw.JiraClient.Issue.Search(query, &jira.SearchOptions{
 		StartAt:    0,
 		MaxResults: maxResults,

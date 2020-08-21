@@ -7,5 +7,5 @@ require (
 	github.com/pkg/errors v0.8.1
 	github.com/sirupsen/logrus v1.6.0
 	github.com/spf13/viper v1.7.1
-	github.com/urfave/cli/v2 v2.2.0
+	gopkg.in/robfig/cron.v2 v2.0.0-20150107220207-be2e0b0deed5
 )

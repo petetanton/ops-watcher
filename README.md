@@ -1,6 +1,27 @@
 # OPS Watcher
 A tool that sends MacOS push notifications for updates to JIRA tickets
 
+## Installation with homebrew
+Enable the custom tap
+```bash
+brew tap petetanton/ops-tools
+==> Tapping petetanton/ops-tools
+Cloning into '/usr/local/Homebrew/Library/Taps/petetanton/homebrew-ops-tools'...
+remote: Enumerating objects: 4, done.
+remote: Counting objects: 100% (4/4), done.
+remote: Compressing objects: 100% (2/2), done.
+remote: Total 4 (delta 0), reused 4 (delta 0), pack-reused 0
+Unpacking objects: 100% (4/4), done.
+Tapped 1 formula (27 files, 24.7KB).
+```
+Install ops-watcher
+```bash
+brew install ops-watcher
+==> Installing ops-watcher from petetanton/ops-tools
+==> Downloading https://github.com/petetanton/ops-watcher/releases/download/0.0.1/ops-watcher-darwin-amd64.zip
+🍺  /usr/local/Cellar/ops-watcher/64: 3 files, 12.2MB, built in 4 seconds
+```
+
 ## Configuration
 The app looks for an `ops-watcher.yaml` file which should contain the following:
 ```yaml

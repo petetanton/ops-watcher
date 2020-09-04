@@ -1,10 +1,12 @@
 package main
 
 import (
-	"github.com/petetanton/ops-watcher/pkg"
-	"gopkg.in/robfig/cron.v2"
 	"log"
 	"runtime"
+
+	"gopkg.in/robfig/cron.v2"
+
+	"github.com/petetanton/ops-watcher/pkg"
 )
 
 func main() {

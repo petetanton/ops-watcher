@@ -60,8 +60,12 @@ func (jw *JiraWatcher) Watch() ([]*Notification, error) {
 		MaxResults: maxResults,
 	})
 
-	if err != nil {
+	if err != nil && response != nil {
 		return nil, errors.Wrapf(err, "got a %d status when making a request to jira with query: %s", response.StatusCode, query)
+	}
+
+	if err != nil && response == nil {
+		return nil, errors.Wrapf(err, "got an error when making a request to jira with query: %s", query)
 	}
 
 	var notifications []*Notification

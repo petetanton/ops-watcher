@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"runtime"
+	"strings"
 
 	"gopkg.in/robfig/cron.v2"
 
@@ -55,15 +56,19 @@ func main() {
 
 func runWatchers(watchers []pkg.Watcher, notifier pkg.Notifier) {
 	log.Println("Running watchers")
+	var ids string
 	for _, watcher := range watchers {
 		notifications, err := watcher.Watch()
 		if err != nil {
 			notifier.PushError("error when creating notifications", err)
 		} else {
 			for _, notification := range notifications {
-				err := notification.ToCommand().Run()
-				if err != nil {
-					log.Fatal(err)
+				if strings.Contains(ids, notification.Id) == false {
+					err := notification.ToCommand().Run()
+					if err != nil {
+						log.Fatal(err)
+					}
+					ids += notification.Id
 				}
 			}
 		}

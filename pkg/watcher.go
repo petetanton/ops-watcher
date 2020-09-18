@@ -2,10 +2,12 @@ package pkg
 
 import (
 	"fmt"
+	"net/http"
+	"time"
+
 	"github.com/andygrunwald/go-jira"
 	"github.com/pkg/errors"
-	"log"
-	"time"
+	"github.com/sirupsen/logrus"
 )
 
 type Watcher interface {
@@ -16,9 +18,10 @@ type JiraWatcher struct {
 	JiraClient    *jira.Client
 	JiraQuery     string
 	LastQueryTime time.Time
+	Logger        logrus.FieldLogger
 }
 
-func NewJiraWatchers(config *Config) ([]*JiraWatcher, error) {
+func NewJiraWatchers(config *Config, logger logrus.FieldLogger) ([]*JiraWatcher, error) {
 	tp := jira.BasicAuthTransport{
 		Username: config.JiraUsername,
 		Password: config.JiraPassword,
@@ -35,6 +38,7 @@ func NewJiraWatchers(config *Config) ([]*JiraWatcher, error) {
 		jiraWatchers = append(jiraWatchers, &JiraWatcher{
 			JiraClient: jiraClient,
 			JiraQuery:  query,
+			Logger:     logger,
 		})
 	}
 	return jiraWatchers, nil
@@ -54,7 +58,7 @@ func (jw *JiraWatcher) Watch() ([]*Notification, error) {
 	}
 
 	query := jw.getQueryWithTime()
-	log.Printf("running: %s", query)
+	jw.Logger.Infof("running: %s", query)
 	issues, response, err := jw.JiraClient.Issue.Search(query, &jira.SearchOptions{
 		StartAt:    0,
 		MaxResults: maxResults,
@@ -64,8 +68,12 @@ func (jw *JiraWatcher) Watch() ([]*Notification, error) {
 		return nil, errors.Wrapf(err, "got a %d status when making a request to jira with query: %s", response.StatusCode, query)
 	}
 
-	if err != nil && response == nil {
+	if response == nil {
 		return nil, errors.Wrapf(err, "got an error when making a request to jira with query: %s", query)
+	}
+
+	if response.StatusCode == http.StatusTooManyRequests {
+		return nil, nil
 	}
 
 	var notifications []*Notification
@@ -77,7 +85,7 @@ func (jw *JiraWatcher) Watch() ([]*Notification, error) {
 }
 
 func (jw *JiraWatcher) convertJiraIssueToNotification(issue jira.Issue) *Notification {
-	notification := newNotification()
+	notification := newNotification(issue.Key)
 	notification.addArg("subtitle", fmt.Sprintf("update to %s", issue.Key))
 	notification.addArg("message", issue.Fields.Description)
 	url := jw.JiraClient.GetBaseURL()

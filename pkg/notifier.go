@@ -2,47 +2,50 @@ package pkg
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"os/exec"
+
+	"github.com/sirupsen/logrus"
 )
 
 type Notifier struct {
 	AppName string
 	AppIcon string
+	Logger  logrus.FieldLogger
 }
 
 type Notification struct {
+	Id   string
 	Args []string
 }
 
 func (n *Notifier) Push(subtitle string, message string, open string) {
-	notification := newNotification()
+	notification := newNotification(subtitle)
 	notification.addArg("title", n.AppName)
 	notification.addArg("message", message)
 	notification.addArg("subtitle", subtitle)
-	notification.addArg("appIcon", n.AppIcon)
+	//notification.addArg("appIcon", n.AppIcon)
 	notification.addArg("open", open)
 
 	err := notification.ToCommand().Run()
 	if err != nil {
-		log.Fatal(err)
+		n.Logger.Fatal(err)
 	}
 }
 
 func (n *Notifier) PushError(message string, err error) {
-	notification := newNotification()
+	notification := newNotification("err")
 	notification.addArg("title", n.AppName)
 	notification.addArg("subtitle", "ERROR")
 	notification.addArg("message", fmt.Sprintf("%s: %s", message, err.Error()))
 
 	err = notification.ToCommand().Run()
 	if err != nil {
-		log.Fatal(err)
+		n.Logger.Fatal(err)
 	}
 }
 
-func newNotification() *Notification {
-	return &Notification{[]string{"appIcon", "danger.png"}}
+func newNotification(id string) *Notification {
+	return &Notification{id, []string{"appIcon", "danger.png"}}
 }
 
 func (n *Notification) addArg(key string, value string) {
@@ -51,10 +54,7 @@ func (n *Notification) addArg(key string, value string) {
 
 func (n *Notification) ToCommand() *exec.Cmd {
 	cmd := exec.Command("terminal-notifier")
-
-	for _, arg := range n.Args {
-		cmd.Args = append(cmd.Args, arg)
-	}
+	cmd.Args = append(cmd.Args, n.Args...)
 
 	return cmd
 }

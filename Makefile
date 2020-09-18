@@ -1,3 +1,6 @@
+lint:
+	golangci-lint run
+
 build:
 	for targetos in 'darwin' 'linux'; do \
   		for arch in 'amd64'; do \
@@ -18,3 +21,5 @@ remove:
 
 clean:
 	rm -rf ops-watcher-*
+
+all: clean lint build run

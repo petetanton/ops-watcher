@@ -1,5 +1,0 @@
-for targetos in 'darwin' 'linux'; do \
-    for arch in 'amd64'; do \
-        env GOOS=$targetos GOARCH=$arch go build -o ops-watcher-$targetos-$arch main.go ; \
-    done \
-done

@@ -35,6 +35,7 @@ func main() {
 	config, err := pkg.NewConfig()
 	if err != nil {
 		notifier.PushError("got an error parsing config", err)
+		logger.Fatal("got an error parsing config", err)
 	}
 
 	var watchers []pkg.Watcher

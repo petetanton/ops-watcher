@@ -30,7 +30,7 @@ jobs:
           draft: false
           prerelease: false
       - name: Upload Release Asset DARWIN
-        id: upload-release-asset
+        id: upload-release-asset-darwin
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -40,7 +40,7 @@ jobs:
           asset_name: ops-watcher-darwin-amd64.zip
           asset_content_type: application/zip
       - name: Upload Release Asset LINUX
-        id: upload-release-asset
+        id: upload-release-asset-linux
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

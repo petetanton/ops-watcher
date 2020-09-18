@@ -5,7 +5,7 @@ build:
 	for targetos in 'darwin' 'linux'; do \
   		for arch in 'amd64'; do \
   			env GOOS=$$targetos GOARCH=$$arch go build -o ops-watcher-$$targetos-$$arch main.go ; \
-  			zip ops-watcher-$$targetos-$$arch.zip ops-watcher-$$targetos-$$arch Makefile ; \
+  			zip ops-watcher-$$targetos-$$arch.zip ops-watcher-$$targetos-$$arch face.png ; \
 		done \
 	done
 

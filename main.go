@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"runtime"
 	"strings"
 
@@ -10,13 +11,25 @@ import (
 	"github.com/petetanton/ops-watcher/pkg"
 )
 
-func main() {
+func getLogger() logrus.FieldLogger {
 	logger := logrus.New()
-	logger.SetLevel(logrus.InfoLevel)
+
+	level, err := logrus.ParseLevel(os.Getenv("LOG_LEVEL"))
+	if err != nil {
+		level = logrus.InfoLevel
+		logger.Infof("log level not set so defaulting to INFO. To set a different log level, set LOG_LEVEL in your environment")
+	}
+	logger.SetLevel(level)
+
+	return logger
+}
+
+func main() {
+	logger := getLogger()
 
 	notifier := pkg.Notifier{
 		AppName: "OPS Watcher",
-		AppIcon: "danger.png",
+		AppIcon: "face.png",
 	}
 
 	config, err := pkg.NewConfig()
@@ -67,7 +80,9 @@ func runWatchers(watchers []pkg.Watcher, notifier pkg.Notifier, logger logrus.Fi
 		} else {
 			for _, notification := range notifications {
 				if !strings.Contains(ids, notification.Id) {
-					err := notification.ToCommand().Run()
+					command := notification.ToCommand()
+					logger.Debugf("running: %s", command.String())
+					err := command.Run()
 					if err != nil {
 						logger.Fatal(err)
 					}

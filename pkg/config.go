@@ -9,6 +9,7 @@ import (
 type Config struct {
 	JiraUsername string   `mapstructure:"jira_username"`
 	JiraPassword string   `mapstructure:"jira_password"`
+	JiraToken    string   `mapstructure:"jira_token"`
 	JiraBaseUrl  string   `mapstructure:"jira_baseurl"`
 	JiraEnabled  bool     `mapstructure:"jira_enabled"`
 	JiraQuery    []string `mapstructure:"jira_query"`

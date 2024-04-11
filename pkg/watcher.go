@@ -22,12 +22,7 @@ type JiraWatcher struct {
 }
 
 func NewJiraWatchers(config *Config, logger logrus.FieldLogger) ([]*JiraWatcher, error) {
-	tp := jira.BasicAuthTransport{
-		Username: config.JiraUsername,
-		Password: config.JiraPassword,
-	}
-
-	jiraClient, err := jira.NewClient(tp.Client(), config.JiraBaseUrl)
+	jiraClient, err := getJiraClient(config, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -42,6 +37,21 @@ func NewJiraWatchers(config *Config, logger logrus.FieldLogger) ([]*JiraWatcher,
 		})
 	}
 	return jiraWatchers, nil
+}
+
+func getJiraClient(config *Config, logger logrus.FieldLogger) (*jira.Client, error) {
+	if config.JiraToken != "" {
+		logger.Info("creating Jira client with token auth")
+		tp := jira.BearerAuthTransport{Token: config.JiraPassword}
+		return jira.NewClient(tp.Client(), config.JiraBaseUrl)
+	}
+	tp := &jira.BasicAuthTransport{
+		Username: config.JiraUsername,
+		Password: config.JiraPassword,
+	}
+	logger.Info("creating Jira client with user name and password auth")
+
+	return jira.NewClient(tp.Client(), config.JiraBaseUrl)
 }
 
 func (jw *JiraWatcher) getQueryWithTime() string {

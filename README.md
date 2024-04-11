@@ -34,5 +34,7 @@ jira_query:
   - watcher = currentUser()
 ```
 
+Alternatively, the config can contain a field called `jira_token` which if present will take preference over user name and password for bearer auth style communication with Jira  
+
 When the app runs, it queries the JIRA API every minute for each JQL query in the configuration.  
 If a new issue has been raised or updated for any of those queries since the last run, a Mac OS push notification is sent using the `terminal-notification` command.

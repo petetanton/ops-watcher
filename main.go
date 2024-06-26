@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"os"
 	"runtime"
 	"strings"
@@ -25,6 +26,9 @@ func getLogger() logrus.FieldLogger {
 }
 
 func main() {
+	ctx := context.Background()
+
+	var err error
 	logger := getLogger()
 
 	notifier := pkg.Notifier{
@@ -41,9 +45,10 @@ func main() {
 	var watchers []pkg.Watcher
 
 	if config.JiraEnabled {
-		jiraWatchers, err := pkg.NewJiraWatchers(config, logger)
-		if err != nil {
-			notifier.PushError("error when creating JiraWatcher", err)
+		jiraWatchers, err2 := pkg.NewJiraWatchers(ctx, config, logger)
+		if err2 != nil {
+			logger.Error(err2)
+			notifier.PushError("error when creating JiraWatcher", err2)
 		}
 
 		for _, jiraWatcher := range jiraWatchers {
@@ -62,7 +67,7 @@ func main() {
 	logger.Infof("Setup: %s", msg)
 
 	c := cron.New()
-	_, err = c.AddFunc("* * * * *", func() { runWatchers(watchers, notifier, logger) })
+	_, err = c.AddFunc("* * * * *", func() { runWatchers(ctx, watchers, notifier, logger) })
 	if err != nil {
 		logger.Fatal(err)
 	}
@@ -71,13 +76,14 @@ func main() {
 	runtime.Goexit()
 }
 
-func runWatchers(watchers []pkg.Watcher, notifier pkg.Notifier, logger logrus.FieldLogger) {
+func runWatchers(ctx context.Context, watchers []pkg.Watcher, notifier pkg.Notifier, logger logrus.FieldLogger) {
 	logger.Info("Running watchers")
 	var ids string
 	for _, watcher := range watchers {
-		notifications, err := watcher.Watch()
+		notifications, err := watcher.Watch(ctx)
 		if err != nil {
 			notifier.PushError("error when creating notifications", err)
+			logger.Error(err)
 		} else {
 			for _, notification := range notifications {
 				if !strings.Contains(ids, notification.Id) {

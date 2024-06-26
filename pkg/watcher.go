@@ -1,17 +1,18 @@
 package pkg
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"time"
 
-	"github.com/andygrunwald/go-jira"
+	jira "github.com/andygrunwald/go-jira/v2/onpremise"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
 type Watcher interface {
-	Watch() (notifications []*Notification, err error)
+	Watch(ctx context.Context) (notifications []*Notification, err error)
 }
 
 type JiraWatcher struct {
@@ -21,11 +22,20 @@ type JiraWatcher struct {
 	Logger        logrus.FieldLogger
 }
 
-func NewJiraWatchers(config *Config, logger logrus.FieldLogger) ([]*JiraWatcher, error) {
+func NewJiraWatchers(ctx context.Context, config *Config, logger logrus.FieldLogger) ([]*JiraWatcher, error) {
 	jiraClient, err := getJiraClient(config, logger)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "error creating JIRA Client")
 	}
+
+	logger.Info("finished creating client")
+	u, _, err := jiraClient.User.GetSelf(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "error fetching self from JIRA")
+	}
+	logger.Info("got user details from jira")
+
+	logger.Infof("email of user: %s", u.EmailAddress)
 
 	var jiraWatchers []*JiraWatcher
 
@@ -41,9 +51,8 @@ func NewJiraWatchers(config *Config, logger logrus.FieldLogger) ([]*JiraWatcher,
 
 func getJiraClient(config *Config, logger logrus.FieldLogger) (*jira.Client, error) {
 	if config.JiraToken != "" {
-		logger.Info("creating Jira client with token auth")
-		tp := jira.BearerAuthTransport{Token: config.JiraPassword}
-		return jira.NewClient(tp.Client(), config.JiraBaseUrl)
+		tp := &jira.BearerAuthTransport{Token: config.JiraToken}
+		return jira.NewClient(config.JiraBaseUrl, tp.Client())
 	}
 	tp := &jira.BasicAuthTransport{
 		Username: config.JiraUsername,
@@ -51,7 +60,7 @@ func getJiraClient(config *Config, logger logrus.FieldLogger) (*jira.Client, err
 	}
 	logger.Info("creating Jira client with user name and password auth")
 
-	return jira.NewClient(tp.Client(), config.JiraBaseUrl)
+	return jira.NewClient(config.JiraBaseUrl, tp.Client())
 }
 
 func (jw *JiraWatcher) getQueryWithTime() string {
@@ -61,7 +70,7 @@ func (jw *JiraWatcher) getQueryWithTime() string {
 	return query
 }
 
-func (jw *JiraWatcher) Watch() ([]*Notification, error) {
+func (jw *JiraWatcher) Watch(ctx context.Context) ([]*Notification, error) {
 	maxResults := 100
 	if jw.LastQueryTime.Before(time.Now().Add(-time.Hour * 72)) {
 		maxResults = 1
@@ -69,7 +78,7 @@ func (jw *JiraWatcher) Watch() ([]*Notification, error) {
 
 	query := jw.getQueryWithTime()
 	jw.Logger.Infof("running: %s", query)
-	issues, response, err := jw.JiraClient.Issue.Search(query, &jira.SearchOptions{
+	issues, response, err := jw.JiraClient.Issue.Search(ctx, query, &jira.SearchOptions{
 		StartAt:    0,
 		MaxResults: maxResults,
 	})
@@ -98,7 +107,7 @@ func (jw *JiraWatcher) convertJiraIssueToNotification(issue jira.Issue) *Notific
 	notification := newNotification(issue.Key)
 	notification.addArg("subtitle", fmt.Sprintf("update to %s", issue.Key))
 	notification.addArg("message", issue.Fields.Description)
-	url := jw.JiraClient.GetBaseURL()
+	url := jw.JiraClient.BaseURL
 	notification.addArg("open", fmt.Sprintf("%sbrowse/%s", url.String(), issue.Key))
 
 	return notification

@@ -3,7 +3,7 @@ module github.com/petetanton/ops-watcher
 go 1.22
 
 require (
-	github.com/andygrunwald/go-jira/v2 v2.0.0-20240116150243-50d59fe116d6
+	github.com/andygrunwald/go-jira/v2 v2.0.0-20240701184735-6c80e1f14952
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/viper v1.7.1
@@ -25,7 +25,7 @@ require (
 	github.com/spf13/pflag v1.0.3 // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
 	github.com/trivago/tgo v1.0.7 // indirect
-	golang.org/x/sys v0.6.0 // indirect
+	golang.org/x/sys v0.21.0 // indirect
 	golang.org/x/text v0.3.2 // indirect
 	gopkg.in/ini.v1 v1.51.0 // indirect
 	gopkg.in/yaml.v2 v2.2.4 // indirect
